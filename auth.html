@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#10121a">
+<meta name="csrf-token" content="{{ session['csrf_token'] }}">
+<title>Sign in — Emotion Studio</title>
+<style>
+:root{color-scheme:dark;--bg:#10121a;--panel:#181b26;--panel-raised:#1d2130;--line:#2d3243;--ink:#f2f2f8;--muted:#a1a5bb;--accent:#a5b4fc;--accent-ink:#111322;--soft:rgba(165,180,252,.12);--danger:#fca5a5}
+*{box-sizing:border-box}
+body{min-height:100vh;margin:0;padding:24px;display:grid;place-items:center;background:radial-gradient(ellipse at 18% 8%,rgba(99,102,241,.17),transparent 36%),radial-gradient(ellipse at 90% 90%,rgba(56,189,248,.08),transparent 30%),var(--bg);color:var(--ink);font-family:"Avenir Next","Segoe UI",system-ui,sans-serif;line-height:1.5}
+button,input{font:inherit}
+.layout{width:min(100%,1020px);display:grid;grid-template-columns:1fr 1fr;overflow:hidden;border:1px solid rgba(255,255,255,.09);border-radius:24px;background:rgba(24,27,38,.94);box-shadow:0 28px 90px rgba(0,0,0,.4)}
+.welcome{position:relative;display:flex;flex-direction:column;justify-content:space-between;min-height:610px;padding:38px;background:linear-gradient(150deg,rgba(99,102,241,.18),transparent 48%),linear-gradient(330deg,rgba(56,189,248,.08),transparent 38%),#171a25;border-right:1px solid rgba(255,255,255,.07)}
+.brand{display:flex;align-items:center;gap:12px;font-weight:760;letter-spacing:-.02em}
+.brand-mark{display:grid;place-items:center;width:40px;height:40px;border:1px solid rgba(165,180,252,.32);border-radius:13px;background:var(--soft);color:var(--accent);font-size:1.2rem}
+.brand small{display:block;margin-top:1px;color:var(--muted);font-size:.66rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase}
+.welcome-copy{position:relative;z-index:1;margin:36px 0}
+.eyebrow{margin:0 0 12px;color:var(--accent);font-size:.7rem;font-weight:750;letter-spacing:.16em;text-transform:uppercase}
+.welcome h1{max-width:410px;margin:0;font-size:clamp(2.35rem,5vw,3.6rem);letter-spacing:-.065em;line-height:1.02}
+.welcome-copy>p:last-child{max-width:360px;margin:18px 0 0;color:#b3b6c9;font-size:.94rem;line-height:1.75}
+.visual{position:absolute;right:34px;bottom:114px;width:176px;height:176px;display:grid;place-items:center;opacity:.82}
+.orbit{position:absolute;border:1px solid rgba(165,180,252,.2);border-radius:50%;inset:0;transform:rotate(-24deg) scaleX(.73)}
+.orbit:nth-child(2){inset:17px;transform:rotate(38deg) scaleX(.73)}
+.orb-core{display:grid;place-items:center;width:77px;height:77px;border:1px solid rgba(165,180,252,.32);border-radius:26px;background:linear-gradient(145deg,rgba(165,180,252,.22),rgba(99,102,241,.08));color:#c7d2fe;font-size:2rem;box-shadow:0 0 50px rgba(129,140,248,.2)}
+.dot{position:absolute;width:9px;height:9px;border-radius:50%;background:#a5b4fc;box-shadow:0 0 18px #a5b4fc}
+.dot.one{top:18px;left:28px}.dot.two{right:10px;top:72px;width:6px;height:6px;background:#7dd3fc}
+.privacy{position:relative;z-index:1;max-width:390px;display:flex;gap:10px;align-items:flex-start;color:var(--muted);font-size:.72rem;line-height:1.6}
+.privacy-icon{flex:0 0 22px;display:grid;place-items:center;width:22px;height:22px;border:1px solid var(--line);border-radius:7px;color:#c7d2fe}
+.auth{display:flex;flex-direction:column;justify-content:center;padding:48px clamp(28px,5vw,58px)}
+.auth-head{margin-bottom:25px}
+.auth-head h2{margin:0;font-size:1.65rem;letter-spacing:-.045em}
+.auth-head p{margin:7px 0 0;color:var(--muted);font-size:.85rem}
+.switcher{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:23px;padding:4px;border:1px solid var(--line);border-radius:11px;background:#11141d}
+.switcher button{min-height:40px;border:0;border-radius:8px;background:transparent;color:var(--muted);font-size:.78rem;font-weight:700;cursor:pointer;transition:background .18s,color .18s,box-shadow .18s}
+.switcher button[aria-selected=true]{background:var(--panel-raised);color:var(--ink);box-shadow:0 2px 9px rgba(0,0,0,.25)}
+.switcher button:hover:not([aria-selected=true]){color:var(--ink)}
+.field{margin:0 0 16px}
+label{display:block;margin:0 0 7px;color:#d4d5e2;font-size:.76rem;font-weight:650}
+.input-wrap{position:relative}
+input[type=text],input[type=password]{width:100%;height:46px;padding:0 13px;border:1px solid var(--line);border-radius:9px;outline:none;background:#12151e;color:var(--ink);font-size:.85rem;transition:border-color .18s,box-shadow .18s}
+input::placeholder{color:#696e82}
+input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(165,180,252,.13)}
+.hint{margin:6px 0 0;color:#81869c;font-size:.68rem}
+.password-toggle{position:absolute;right:8px;top:50%;transform:translateY(-50%);padding:5px 7px;border:0;border-radius:6px;background:transparent;color:var(--muted);font-size:.7rem;font-weight:700;cursor:pointer}
+.password-toggle:hover{background:rgba(255,255,255,.06);color:var(--ink)}
+.password-field input{padding-right:56px}
+.consent{display:grid;grid-template-columns:17px 1fr;gap:9px;align-items:start;margin:2px 0 17px;color:var(--muted);font-size:.7rem;line-height:1.55}
+.consent[hidden]{display:none}
+.consent input{width:15px;height:15px;margin:2px 0 0;accent-color:var(--accent)}
+.submit{width:100%;min-height:46px;display:flex;align-items:center;justify-content:center;gap:9px;margin-top:5px;border:1px solid var(--accent);border-radius:9px;background:var(--accent);color:var(--accent-ink);font-size:.83rem;font-weight:780;cursor:pointer;transition:filter .18s,transform .18s}
+.submit:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px)}
+.submit:disabled{opacity:.6;cursor:wait}
+.submit-arrow{font-size:1rem;transition:transform .18s}.submit:hover .submit-arrow{transform:translateX(3px)}
+.status{min-height:1.4em;margin:12px 0 0;color:var(--muted);font-size:.76rem}
+.status.error{color:var(--danger)}
+.secure-note{display:flex;justify-content:center;align-items:center;gap:7px;margin:21px 0 0;color:#83889e;font-size:.67rem;text-align:center}
+.secure-note span{color:#a5b4fc}
+:focus-visible{outline:3px solid #c7d2fe;outline-offset:3px}
+@media(max-width:760px){body{padding:16px}.layout{width:min(100%,480px);grid-template-columns:1fr}.welcome{min-height:0;padding:24px 26px;border-right:0;border-bottom:1px solid rgba(255,255,255,.07)}.welcome-copy{margin:27px 0 18px}.welcome h1{max-width:360px;font-size:2.45rem}.welcome-copy>p:last-child{max-width:420px;margin-top:11px;font-size:.84rem}.visual{right:20px;bottom:26px;width:106px;height:106px;opacity:.55}.orb-core{width:52px;height:52px;border-radius:18px;font-size:1.5rem}.privacy{max-width:none}.auth{padding:30px 26px 27px}}
+@media(max-width:380px){body{padding:10px}.welcome{padding:20px}.auth{padding:25px 20px}.welcome h1{font-size:2.1rem}.visual{right:10px;bottom:35px;width:80px;height:80px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
+</style>
+</head>
+<body>
+<main class="layout">
+  <section class="welcome" aria-label="Welcome to Emotion Studio">
+    <div class="brand"><span class="brand-mark" aria-hidden="true">✳</span><div>Emotion Studio<small>Emotion insights</small></div></div>
+    <div class="welcome-copy">
+      <p class="eyebrow">A clearer perspective</p>
+      <h1>Understand every expression.</h1>
+      <p>Sign in to continue to your private emotion analysis workspace.</p>
+      <div class="visual" aria-hidden="true"><span class="orbit"></span><span class="orbit"></span><span class="dot one"></span><span class="dot two"></span><span class="orb-core">✳</span></div>
+    </div>
+    <div class="privacy"><span class="privacy-icon" aria-hidden="true">✓</span><span>Your account keeps your analysis profile together. Always let people know before analyzing or saving their images.</span></div>
+  </section>
+  <section class="auth" aria-label="Account access">
+    <div class="auth-head">
+      <h2 id="formTitle">Welcome back</h2>
+      <p id="formDescription">Enter your details to sign in to your account.</p>
+    </div>
+    <div class="switcher" role="tablist" aria-label="Choose account action">
+      <button id="signInTab" type="button" role="tab" aria-selected="true" aria-controls="authForm" tabindex="0">Sign in</button>
+      <button id="createTab" type="button" role="tab" aria-selected="false" aria-controls="authForm" tabindex="-1">Create account</button>
+    </div>
+    <form id="authForm" role="tabpanel" aria-labelledby="signInTab">
+      <div class="field">
+        <label for="username">Username</label>
+        <input id="username" name="username" type="text" minlength="3" maxlength="32" pattern="[A-Za-z0-9_.\-]+" placeholder="Your username" autocomplete="username" required>
+        <p class="hint" id="usernameHint" hidden>3–32 characters: letters, numbers, dots, underscores, or hyphens.</p>
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <div class="input-wrap password-field">
+          <input id="password" name="password" type="password" minlength="8" maxlength="128" placeholder="Your password" autocomplete="current-password" required>
+          <button class="password-toggle" id="passwordToggle" type="button" aria-label="Show password" aria-pressed="false">Show</button>
+        </div>
+        <p class="hint" id="passwordHint" hidden>Use at least 8 characters.</p>
+      </div>
+      <label class="consent" id="consentRow" hidden>
+        <input id="consent" type="checkbox">
+        <span>I have permission to analyze people and agree that records are saved. Up to {{ image_limit }} full images are retained per emotion for this account.</span>
+      </label>
+      <button class="submit" id="submitButton" type="submit"><span id="submitLabel">Sign in</span><span class="submit-arrow" aria-hidden="true">→</span></button>
+      <p class="status" id="formStatus" role="status" aria-live="polite"></p>
+    </form>
+    <p class="secure-note"><span aria-hidden="true">●</span> Protected sign-in · Use HTTPS on public networks</p>
+  </section>
+</main>
+<script>
+const csrfToken=document.querySelector('meta[name="csrf-token"]').content;
+const signInTab=document.getElementById("signInTab");
+const createTab=document.getElementById("createTab");
+const authForm=document.getElementById("authForm");
+const username=document.getElementById("username");
+const password=document.getElementById("password");
+const consent=document.getElementById("consent");
+const consentRow=document.getElementById("consentRow");
+const formStatus=document.getElementById("formStatus");
+const submitButton=document.getElementById("submitButton");
+let creatingAccount=false;
+
+function setMode(create){
+  creatingAccount=create;
+  signInTab.setAttribute("aria-selected",String(!create));
+  signInTab.tabIndex=create?-1:0;
+  createTab.setAttribute("aria-selected",String(create));
+  createTab.tabIndex=create?0:-1;
+  authForm.setAttribute("aria-labelledby",create?"createTab":"signInTab");
+  document.getElementById("formTitle").textContent=create?"Create your account":"Welcome back";
+  document.getElementById("formDescription").textContent=create
+    ?"Set up your account to get started."
+    :"Enter your details to sign in to your account.";
+  document.getElementById("submitLabel").textContent=create?"Create account":"Sign in";
+  document.getElementById("usernameHint").hidden=!create;
+  document.getElementById("passwordHint").hidden=!create;
+  document.getElementById("password").autocomplete=create?"new-password":"current-password";
+  document.getElementById("password").placeholder=create?"At least 8 characters":"Your password";
+  consentRow.hidden=!create;
+  consent.required=create;
+  formStatus.textContent="";
+  formStatus.classList.remove("error");
+}
+
+signInTab.addEventListener("click",()=>setMode(false));
+createTab.addEventListener("click",()=>setMode(true));
+for(const tab of [signInTab,createTab]){
+  tab.addEventListener("keydown",event=>{
+    if(event.key==="ArrowLeft"||event.key==="ArrowRight"){
+      event.preventDefault();
+      const next=tab===signInTab?createTab:signInTab;
+      next.focus();
+      setMode(next===createTab);
+    }
+  });
+}
+
+document.getElementById("passwordToggle").addEventListener("click",event=>{
+  const visible=password.type==="text";
+  password.type=visible?"password":"text";
+  event.currentTarget.textContent=visible?"Show":"Hide";
+  event.currentTarget.setAttribute("aria-label",visible?"Show password":"Hide password");
+  event.currentTarget.setAttribute("aria-pressed",String(!visible));
+});
+
+authForm.addEventListener("submit",async event=>{
+  event.preventDefault();
+  formStatus.classList.remove("error");
+  formStatus.textContent=creatingAccount?"Creating your account…":"Signing in…";
+  submitButton.disabled=true;
+  try{
+    const response=await fetch(creatingAccount?"/api/register":"/api/login",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","X-CSRF-Token":csrfToken},
+      body:JSON.stringify({
+        username:username.value.trim(),
+        password:password.value,
+        ...(creatingAccount?{consent:consent.checked}:{})
+      })
+    });
+    const result=await response.json();
+    if(!response.ok)throw new Error(result.error||"Request failed.");
+    window.location.assign(result.redirect);
+  }catch(error){
+    formStatus.textContent=error.message;
+    formStatus.classList.add("error");
+    submitButton.disabled=false;
+  }
+});
+</script>
+</body>
+</html>

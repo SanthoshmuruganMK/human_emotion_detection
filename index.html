@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#12131c">
+<meta name="csrf-token" content="{{ session['csrf_token'] }}">
+<title>Emotion Studio — AI Emotion Detection</title>
+<style>
+:root{--bg:#12131c;--panel:#1b1d2a;--panel-raised:#202232;--line:#2b2e40;--ink:#ecebf5;--muted:#9a9bb3;--accent:#94a3b8;--accent-soft:color-mix(in srgb,var(--accent) 12%,transparent)}
+*{box-sizing:border-box}
+body{min-height:100vh;margin:0;background:radial-gradient(ellipse at 50% -24%,rgba(148,163,184,.11),transparent 54%),var(--bg);color:var(--ink);font-family:"Avenir Next","Segoe UI",system-ui,sans-serif;line-height:1.5}
+button,input{font:inherit}
+main{width:min(1220px,100%);margin:0 auto;padding:24px 28px 42px}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 0 25px;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:11px;color:var(--ink);font-weight:750;letter-spacing:.01em}
+.brand-mark{display:grid;place-items:center;width:36px;height:36px;border:1px solid rgba(148,163,184,.35);border-radius:11px;background:var(--accent-soft);color:var(--accent);font-size:1.2rem}
+.brand small{display:block;color:var(--muted);font-size:.7rem;font-weight:500;letter-spacing:.13em;text-transform:uppercase}
+.top-meta{display:flex;align-items:center;gap:10px}
+.top-chip,.camera-state,.scan-state{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:999px;padding:6px 11px;color:var(--muted);font-size:.72rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase}
+.top-chip{background:rgba(255,255,255,.02)}
+.account-menu{display:flex;align-items:center;gap:9px}
+.account-avatar{width:31px;height:31px;border:1px solid var(--line);border-radius:50%;object-fit:cover;background:var(--accent-soft);color:var(--accent)}
+.account-initial{display:grid;place-items:center;font-size:.8rem;font-weight:750}
+.account-name{max-width:130px;overflow:hidden;color:var(--ink);font-size:.8rem;text-overflow:ellipsis;white-space:nowrap}
+.logout-form{margin:0}
+.logout-button{padding:7px 10px;font-size:.75rem}
+.eyebrow{margin:0 0 8px;color:var(--accent);font-size:.72rem;font-weight:750;letter-spacing:.17em;text-transform:uppercase}
+.hero{display:flex;align-items:end;justify-content:space-between;gap:20px;padding:30px 0 23px}
+h1{font-size:clamp(1.8rem,4vw,2.55rem);letter-spacing:-.045em;line-height:1.1;margin:0}
+.sub{color:var(--muted);margin:9px 0 0;font-size:.96rem}
+.network-note{margin:0 0 19px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.02);color:var(--muted);font-size:.77rem}
+.network-note strong{color:var(--ink)}
+.network-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:7px}
+.network-links a{color:var(--accent);overflow-wrap:anywhere}
+.sharing-note{margin:10px 2px 0;color:var(--muted);font-size:.72rem}
+.workspace{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(330px,.85fr);gap:18px;align-items:start}
+.panel{background:linear-gradient(145deg,rgba(255,255,255,.025),transparent 50%),var(--panel);border:1px solid var(--line);border-radius:16px;padding:19px;box-shadow:0 14px 42px rgba(0,0,0,.13)}
+.camera-panel{grid-row:span 2}
+.card-heading{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:15px}
+.card-heading h2{font-size:.98rem;margin:0;font-weight:700;letter-spacing:-.01em}
+.card-kicker{color:var(--muted);font-size:.78rem;margin:3px 0 0}
+.camera-state{flex-shrink:0}
+.camera-state::before,.scan-state::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.camera-state.live{color:#86efac;border-color:rgba(134,239,172,.2);background:rgba(134,239,172,.07)}
+.camera-state.offline{color:var(--muted)}
+.stage{position:relative;background:#08090e;border-radius:12px;overflow:hidden;aspect-ratio:4/3;border:1px solid rgba(148,163,184,.3);transition:border-color .4s,box-shadow .4s}
+.stage::after{content:"";position:absolute;inset:0;pointer-events:none;border:1px solid rgba(255,255,255,.035);border-radius:inherit}
+.stage video,.stage img,.stage canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.stage.mirror video,.stage.mirror canvas{transform:scaleX(-1)}
+.stage img{display:none}
+.stage-hint{position:absolute;z-index:2;left:14px;bottom:13px;padding:6px 9px;border:1px solid rgba(255,255,255,.1);border-radius:7px;background:rgba(18,19,28,.78);backdrop-filter:blur(10px);color:#d8d8e2;font-size:.72rem}
+.controls{display:flex;flex-wrap:wrap;gap:9px;margin-top:15px}
+button,.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:700;padding:10px 15px;border-radius:9px;border:1px solid var(--accent);background:var(--accent);color:#12131c;cursor:pointer;transition:transform .18s,background .25s,border-color .25s,box-shadow .25s}
+button:hover:not(:disabled),.btn:hover{transform:translateY(-1px);box-shadow:0 6px 18px var(--accent-soft)}
+button.ghost,.btn.ghost{background:rgba(255,255,255,.025);color:var(--ink);border-color:var(--line)}
+button.ghost:hover:not(:disabled),.btn.ghost:hover{border-color:var(--accent);background:var(--accent-soft)}
+button:disabled{opacity:.45;cursor:not-allowed}
+:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+input[type=file]{display:none}
+.button-icon{font-size:1rem;line-height:1}
+.insight-panel{overflow:hidden;position:relative}
+.insight-panel::before{content:"";position:absolute;top:-84px;right:-78px;width:190px;height:190px;border-radius:50%;background:var(--accent);opacity:.055;filter:blur(4px);pointer-events:none}
+.scan-state{position:relative;z-index:1;font-size:.65rem;padding:5px 9px}
+.live-summary{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:4px 0 13px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.018)}
+.live-summary strong{font-size:.82rem}
+.live-summary span{color:var(--muted);font-size:.7rem}
+.persons-list{display:grid;grid-template-columns:1fr;gap:10px;max-height:580px;overflow:auto;padding:1px 3px 1px 0}
+.person-card{min-width:0;padding:12px;border:1px solid var(--line);border-radius:12px;background:linear-gradient(140deg,rgba(255,255,255,.025),transparent 55%),rgba(11,13,20,.25)}
+.person-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px}
+.person-label{display:flex;align-items:center;gap:8px;font-size:.78rem;font-weight:750}
+.person-number{display:grid;place-items:center;width:26px;height:26px;border:1px solid color-mix(in srgb,var(--person-color) 50%,transparent);border-radius:8px;background:color-mix(in srgb,var(--person-color) 14%,transparent);color:var(--person-color);font-size:.7rem}
+.person-confidence{color:var(--muted);font-size:.68rem}
+.person-result{display:flex;align-items:center;gap:9px;margin-bottom:10px}
+.person-emoji{display:grid;place-items:center;flex:0 0 37px;height:37px;border:1px solid var(--line);border-radius:11px;background:var(--panel-raised);font-size:1.3rem}
+.person-emotion{color:var(--person-color);font-size:1.02rem;font-weight:750;letter-spacing:-.025em}
+.person-bars{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px 12px}
+.person-score{display:grid;grid-template-columns:48px minmax(30px,1fr) 30px;align-items:center;gap:6px;color:var(--muted);font-size:.62rem}
+.person-score-name{overflow:hidden;text-overflow:ellipsis}
+.person-score-track{height:5px;overflow:hidden;border-radius:5px;background:var(--line)}
+.person-score-fill{height:100%;border-radius:inherit;background:var(--person-color)}
+.person-score-value{text-align:right}
+.no-persons{padding:22px 14px;border:1px dashed var(--line);border-radius:11px;color:var(--muted);font-size:.78rem;text-align:center}
+.position-note{margin:10px 1px 0;color:var(--muted);font-size:.66rem;line-height:1.5}
+.section-label{display:flex;justify-content:space-between;align-items:center;margin:0 0 8px;color:var(--muted);font-size:.7rem;font-weight:750;letter-spacing:.1em;text-transform:uppercase}
+.face-count{color:var(--ink);font-size:.75rem;font-weight:600;letter-spacing:0;text-transform:none}
+.row{display:grid;grid-template-columns:74px 1fr 38px;gap:10px;align-items:center;font-size:.78rem;margin:10px 0}
+.track{height:7px;background:var(--line);border-radius:5px;overflow:hidden}
+.fill{height:100%;width:0;background:var(--muted);border-radius:5px;transition:width .45s cubic-bezier(.2,.7,.2,1),background .35s}
+.row.top .fill{background:var(--c)}
+.row span:last-child{text-align:right;color:var(--muted)}
+/* profile */
+.profile{padding:19px}
+.profile-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
+.profile-head h2{font-size:.98rem;margin:0}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.stat{padding:11px;border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.018);color:var(--muted);font-size:.7rem}
+.stats b{display:block;color:var(--ink);font-size:1.15rem;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stats .profile-id{font-size:.74rem;overflow-wrap:anywhere;white-space:normal}
+#status{color:var(--muted);font-size:.82rem;min-height:1.4em;margin:10px 1px 0}#status.error{color:#fb923c}
+.footer-note{display:flex;align-items:center;gap:8px;margin:17px 2px 0;color:var(--muted);font-size:.72rem}
+.footer-note span{color:var(--accent)}
+@media(max-width:850px){main{padding:19px 18px 34px}.workspace{grid-template-columns:minmax(0,1.1fr) minmax(290px,.9fr)}}
+@media(max-width:680px){main{padding:14px 14px 28px}.topbar{padding-bottom:16px}.top-chip{font-size:.62rem;padding:5px 8px}.hero{padding:24px 0 18px}.workspace{grid-template-columns:1fr;gap:13px}.camera-panel{grid-row:auto}.panel{padding:15px}.persons-list{max-height:420px}.footer-note{margin-top:13px}}
+@media(max-width:390px){.person-bars{grid-template-columns:1fr}.live-summary{align-items:flex-start;flex-direction:column;gap:3px}}
+@media(max-width:390px){.top-meta{gap:5px}.top-chip{letter-spacing:.02em}.account-name{display:none}.brand small{font-size:.62rem}.camera-state{font-size:.62rem;padding:5px 8px}.controls button,.controls .btn{flex:1;padding:9px 10px;font-size:.86rem}}
+</style>
+</head>
+<body data-emotion="none">
+<main>
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark">✳</span><div>Emotion Studio<small>AI perception dashboard</small></div></div>
+    <div class="top-meta">
+      <span class="top-chip">FER · 7 CLASSES</span>
+      <div class="account-menu">
+        <span class="account-avatar account-initial" aria-hidden="true">{{ account.display_name[:1]|upper }}</span>
+        <span class="account-name">{{ account.display_name }}</span>
+      </div>
+      <form class="logout-form" action="{{ url_for('logout') }}" method="post"><input type="hidden" name="csrf_token" value="{{ session['csrf_token'] }}"><button class="ghost logout-button" type="submit">Sign out</button></form>
+    </div>
+  </header>
+  <section class="hero">
+    <div><p class="eyebrow">Facial expression analysis</p><h1>Understand the moment.</h1><p class="sub">Real-time emotion insights from your camera, a Meet tab, or a photo.</p></div>
+  </section>
+  <aside class="network-note">
+    {% if user_url %}
+    <strong>Public HTTPS address for your devices</strong>
+    <div class="network-links"><a href="{{ user_url }}">{{ user_url }}</a></div>
+    {% else %}
+    <strong>Open Emotion Studio from another device on this Wi-Fi</strong>
+    {% if network_urls %}
+    <div class="network-links">{% for address in network_urls %}<a href="{{ address }}/login">{{ address }}/login</a>{% endfor %}</div>
+    {% else %}
+    <div>No local-network IP was found. Check that this computer is connected to Wi-Fi.</div>
+    {% endif %}
+    {% endif %}
+    <div>Camera and Meet-tab sharing on phones and other computers require a trusted HTTPS address. Local HTTP addresses can still be used for the dashboard and uploaded photos.</div>
+  </aside>
+  <div class="workspace">
+      <section class="panel camera-panel">
+        <div class="card-heading"><div><h2>Live input</h2><p class="card-kicker" id="inputHint">Use your camera or open a Meet call and share its tab</p></div><span id="cameraState" class="camera-state offline">Input offline</span></div>
+        <div class="stage mirror" id="stage">
+          <video id="video" autoplay playsinline muted></video>
+          <img id="photo" alt="Uploaded photo">
+          <canvas id="overlay"></canvas>
+          <span class="stage-hint">CAMERA / SHARED MEET VIEW</span>
+        </div>
+        <div class="controls">
+          <button id="start"><span class="button-icon">◉</span>Start camera</button>
+          <button id="shareMeet" class="ghost"><span class="button-icon">▣</span>Share Meet tab</button>
+          <button id="stop" class="ghost" disabled><span class="button-icon">■</span>Stop</button>
+          <label class="btn ghost" tabindex="0" id="uploadLabel"><span class="button-icon">↑</span>Upload photo<input type="file" id="file" accept="image/*"></label>
+        </div>
+        <p id="status" aria-live="polite"></p>
+      </section>
+      <section class="panel insight-panel" aria-live="polite">
+        <div class="card-heading"><div><h2>Live analysis</h2><p class="card-kicker">Individual results for each detected face</p></div><span id="scanState" class="scan-state">Waiting for input</span></div>
+        <div class="live-summary"><strong id="liveSummary">Waiting for faces</strong><span id="faceCount">0 people</span></div>
+        <div class="persons-list" id="personsList" aria-live="polite">
+          <div class="no-persons">Start the camera or share a Meet tab to analyze faces individually.</div>
+        </div>
+        <p class="position-note">Person numbers are assigned from left to right in the current view and may change as people move.</p>
+      </section>
+      <section class="panel profile">
+        <div class="profile-head"><h2>Session profile</h2></div>
+        <div class="stats">
+          <div class="stat"><b id="profileFaces">0</b>Faces detected (latest frame)</div>
+          <div class="stat"><b id="profileId" class="profile-id">-</b>Profile ID</div>
+        </div>
+      </section>
+  </div>
+  <p class="footer-note"><span>✦</span> Meet runs in its own browser tab because Google does not allow calls to be embedded here. Analysis records are saved privately; no more than {{ image_limit }} full frames are retained for any one emotion per account.</p>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const COLORS = {Angry:"#ef4444",Disgust:"#84cc16",Fear:"#a78bfa",Happy:"#facc15",Neutral:"#94a3b8",Sad:"#60a5fa",Surprise:"#fb923c"};
+const FACES  = {Angry:"😠",Disgust:"🤢",Fear:"😨",Happy:"😄",Neutral:"😐",Sad:"😢",Surprise:"😲"};
+const video=$("video"), photo=$("photo"), overlay=$("overlay"), stage=$("stage");
+const cap=document.createElement("canvas");
+let stream=null, timer=null, busy=false, profileId=null, inputType=null;
+const csrfToken=document.querySelector('meta[name="csrf-token"]').content;
+
+function status(msg,err){$("status").textContent=msg||"";$("status").className=err?"error":"";}
+function theme(emotion){
+  document.documentElement.style.setProperty("--accent",COLORS[emotion]||"#94a3b8");
+  document.body.dataset.emotion=emotion||"none";
+}
+function renderProfile(p){
+  if(!p)return;
+  profileId=p.id;
+  $("profileId").textContent=p.id;
+  $("profileId").title=p.id;
+  $("profileFaces").textContent=p.faces_detected??0;
+}
+async function api(path,body){
+  const r=await fetch(path,{method:"POST",headers:{"Content-Type":"application/json","X-CSRF-Token":csrfToken},body:JSON.stringify(body)});
+  const d=await r.json(); if(!r.ok||d.error)throw new Error(d.error||"Request failed"); return d;
+}
+async function initProfile(){
+  try{ const p=await api("/api/profile",{}); renderProfile(p); }
+  catch(e){status("Could not create a profile: "+e.message,true);}
+}
+
+async function send(source,w,h,captureSource=inputType){
+  if(busy)return; busy=true;
+  const maxWidth=captureSource==="meet"?1920:1280;
+  const scale=Math.min(1,maxWidth/w); cap.width=Math.round(w*scale); cap.height=Math.round(h*scale);
+  cap.getContext("2d").drawImage(source,0,0,cap.width,cap.height);
+  try{
+    const d=await api("/api/predict",{image:cap.toDataURL("image/jpeg",.9),profile_id:profileId,source:captureSource||"photo"});
+    show(d.faces,cap.width,cap.height); renderProfile(d.profile); status("");
+  }catch(e){status("Detection failed: "+e.message,true);}
+  finally{busy=false;}
+}
+function show(faces,w,h){
+  overlay.width=w; overlay.height=h;
+  const ctx=overlay.getContext("2d"); ctx.clearRect(0,0,w,h);
+  if(!faces.length){
+    theme(null);
+    $("liveSummary").textContent="No people detected";
+    $("faceCount").textContent="0 people";
+    const empty=document.createElement("div");
+    empty.className="no-persons";
+    empty.textContent=inputType==="meet"
+      ?"Keep participant tiles visible in the shared Meet tab."
+      :inputType==="photo"?"No clear faces found in this photo.":"Face the camera in good light.";
+    $("personsList").replaceChildren(empty);
+    $("scanState").textContent="No face detected";
+    return;
+  }
+  const mirrored=stage.classList.contains("mirror");
+  const orderedFaces=[...faces].sort((a,b)=>{
+    const aCenter=a.box[0]+a.box[2]/2;
+    const bCenter=b.box[0]+b.box[2]/2;
+    return mirrored?bCenter-aCenter:aCenter-bCenter;
+  });
+  theme(orderedFaces[0].emotion);
+  $("liveSummary").textContent=`Live analysis · ${orderedFaces.length} ${orderedFaces.length===1?"person":"people"}`;
+  $("faceCount").textContent=orderedFaces.length+" "+(orderedFaces.length===1?"person":"people");
+  $("scanState").textContent=orderedFaces.length===1?"1 person analyzed":`${orderedFaces.length} people analyzed`;
+  $("personsList").replaceChildren();
+
+  orderedFaces.forEach((face,index)=>{
+    const [x,y,fw,fh]=face.box;
+    const color=COLORS[face.emotion]||"#94a3b8";
+    const label=`Person ${index+1}`;
+    ctx.strokeStyle=color;
+    ctx.lineWidth=3;
+    ctx.strokeRect(x,y,fw,fh);
+    ctx.font="600 14px system-ui";
+    const labelWidth=ctx.measureText(label).width+16;
+    const labelX=mirrored?x+fw-labelWidth:x;
+    const labelY=Math.max(22,y);
+    ctx.fillStyle=color;
+    ctx.fillRect(labelX,labelY-22,labelWidth,22);
+    ctx.fillStyle="#10121a";
+    ctx.save();
+    if(mirrored){
+      ctx.translate(labelX+labelWidth,labelY-7);
+      ctx.scale(-1,1);
+      ctx.fillText(label,0,0);
+    }else{
+      ctx.fillText(label,labelX+8,labelY-7);
+    }
+    ctx.restore();
+
+    const card=document.createElement("article");
+    card.className="person-card";
+    card.style.setProperty("--person-color",color);
+
+    const heading=document.createElement("div");
+    heading.className="person-head";
+    const personLabel=document.createElement("div");
+    personLabel.className="person-label";
+    const number=document.createElement("span");
+    number.className="person-number";
+    number.textContent=String(index+1);
+    const name=document.createElement("span");
+    name.textContent=label;
+    personLabel.append(number,name);
+    const confidence=document.createElement("span");
+    confidence.className="person-confidence";
+    confidence.textContent=`${Number(face.confidence).toFixed(1)}% confidence`;
+    heading.append(personLabel,confidence);
+
+    const result=document.createElement("div");
+    result.className="person-result";
+    const emoji=document.createElement("span");
+    emoji.className="person-emoji";
+    emoji.textContent=FACES[face.emotion]||"🙂";
+    const emotion=document.createElement("span");
+    emotion.className="person-emotion";
+    emotion.textContent=face.emotion;
+    result.append(emoji,emotion);
+
+    const scores=document.createElement("div");
+    scores.className="person-bars";
+    Object.entries(face.scores||{})
+      .sort((a,b)=>Number(b[1])-Number(a[1]))
+      .forEach(([emotionName,score])=>{
+        const scoreRow=document.createElement("div");
+        scoreRow.className="person-score";
+        const scoreName=document.createElement("span");
+        scoreName.className="person-score-name";
+        scoreName.textContent=emotionName;
+        const track=document.createElement("span");
+        track.className="person-score-track";
+        const fill=document.createElement("span");
+        fill.className="person-score-fill";
+        fill.style.width=`${Math.max(0,Math.min(100,Number(score)||0))}%`;
+        track.append(fill);
+        const value=document.createElement("span");
+        value.className="person-score-value";
+        value.textContent=`${Number(score).toFixed(0)}%`;
+        scoreRow.append(scoreName,track,value);
+        scores.append(scoreRow);
+      });
+    card.append(heading,result,scores);
+    $("personsList").append(card);
+  });
+}
+async function useStream(newStream,type){
+  stream=newStream; inputType=type;
+  photo.style.display="none"; video.style.display="block";
+  stage.classList.toggle("mirror",type==="camera");
+  video.srcObject=stream;
+  try{await video.play();}
+  catch(error){stopCamera();throw error;}
+  $("start").disabled=true; $("shareMeet").disabled=true; $("stop").disabled=false; status("");
+  $("cameraState").textContent=type==="meet"?"Meet tab shared":"Camera live";
+  $("cameraState").classList.remove("offline"); $("cameraState").classList.add("live");
+  $("scanState").textContent="Waiting for face";
+  $("inputHint").textContent=type==="meet"?"Analyzing faces visible in the shared Meet tab":"Position your face in the frame to begin";
+  timer=setInterval(()=>video.videoWidth&&send(video,video.videoWidth,video.videoHeight,type),1000);
+  if(type==="meet")stream.getVideoTracks()[0].addEventListener("ended",stopCamera,{once:true});
+}
+async function startCamera(){
+  try{
+    const newStream=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:1280},height:{ideal:720},frameRate:{ideal:15,max:30}},audio:false});
+    await useStream(newStream,"camera");
+  }catch(e){status("Camera unavailable. Allow camera access in the browser and try again.",true);}
+}
+async function shareMeet(){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getDisplayMedia){
+    status("Tab sharing is not supported by this browser.",true);return;
+  }
+  try{
+    const newStream=await navigator.mediaDevices.getDisplayMedia({video:{width:{ideal:1920},height:{ideal:1080},frameRate:{ideal:8,max:12}},audio:false});
+    await useStream(newStream,"meet");
+  }catch(e){
+    if(e.name!=="NotAllowedError")status("Could not share the Meet tab: "+e.message,true);
+  }
+}
+function stopCamera(){
+  clearInterval(timer); if(stream)stream.getTracks().forEach(t=>t.stop()); video.srcObject=null; stream=null;
+  inputType=null;
+  const ctx=overlay.getContext("2d"); ctx.clearRect(0,0,overlay.width,overlay.height);
+  $("liveSummary").textContent="Waiting for faces";
+  $("faceCount").textContent="0 people";
+  $("personsList").replaceChildren(Object.assign(document.createElement("div"),{
+    className:"no-persons",
+    textContent:"Start the camera or share a Meet tab to analyze faces individually."
+  }));
+  $("start").disabled=false; $("shareMeet").disabled=false; $("stop").disabled=true;
+  $("cameraState").textContent="Input offline"; $("cameraState").classList.remove("live"); $("cameraState").classList.add("offline");
+  $("inputHint").textContent="Use your camera or share a Meet tab";
+  $("scanState").textContent="Waiting for input";
+}
+$("start").onclick=startCamera; $("shareMeet").onclick=shareMeet; $("stop").onclick=stopCamera;
+$("uploadLabel").addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();$("file").click();}});
+$("file").onchange=e=>{
+  const f=e.target.files[0]; if(!f)return; stopCamera();
+  $("cameraState").textContent="Photo analysis"; $("cameraState").classList.remove("offline","live");
+  $("scanState").textContent="Loading photo";
+  photo.onload=()=>{ video.style.display="none"; photo.style.display="block"; stage.classList.remove("mirror");
+    send(photo,photo.naturalWidth,photo.naturalHeight,"photo"); };
+  photo.src=URL.createObjectURL(f); e.target.value="";
+};
+initProfile();
+</script>
+</body>
+</html>

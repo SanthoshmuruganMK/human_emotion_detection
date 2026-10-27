@@ -1,0 +1,12 @@
+/login/
+/backend/
+/.venv/
+/venv/
+/train/
+/test/
+/input_dataset/
+__pycache__/
+*.py[cod]
+.env
+.env.*
+!.env.example

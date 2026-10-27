@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#10121a">
+<title>{% if authorized %}Stored data{% else %}Owner access{% endif %} — Emotion Studio</title>
+<style>
+:root{color-scheme:dark;--bg:#10121a;--panel:#191c27;--panel2:#202433;--line:#303548;--ink:#f1f2f8;--muted:#a0a5ba;--accent:#a5b4fc;--green:#86efac;--orange:#fdba74;--red:#fca5a5}
+*{box-sizing:border-box}
+body{min-height:100vh;margin:0;background:radial-gradient(ellipse at 50% -18%,rgba(99,102,241,.14),transparent 50%),var(--bg);color:var(--ink);font-family:"Avenir Next","Segoe UI",system-ui,sans-serif;line-height:1.5}
+button,input{font:inherit}
+a{color:var(--accent)}
+.wrap{width:min(1240px,100%);margin:0 auto;padding:26px}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;padding-bottom:20px;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:11px;font-weight:760}
+.mark{display:grid;place-items:center;width:38px;height:38px;border:1px solid rgba(165,180,252,.3);border-radius:12px;background:rgba(165,180,252,.1);color:var(--accent);font-size:1.1rem}
+.brand small{display:block;color:var(--muted);font-size:.67rem;font-weight:550;letter-spacing:.12em;text-transform:uppercase}
+.private-pill{padding:6px 10px;border:1px solid rgba(134,239,172,.2);border-radius:999px;background:rgba(134,239,172,.06);color:var(--green);font-size:.68rem;font-weight:750;letter-spacing:.08em;text-transform:uppercase}
+.hero{display:flex;align-items:end;justify-content:space-between;gap:20px;margin:28px 0 20px}
+.eyebrow{margin:0 0 7px;color:var(--accent);font-size:.68rem;font-weight:750;letter-spacing:.15em;text-transform:uppercase}
+h1{margin:0;font-size:clamp(1.8rem,4vw,2.5rem);letter-spacing:-.05em;line-height:1.1}
+.sub{margin:8px 0 0;color:var(--muted);font-size:.86rem}
+.logout{padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);font-size:.75rem;font-weight:700;cursor:pointer}
+.logout:hover{border-color:var(--accent)}
+.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:21px}
+.metric,.panel{border:1px solid var(--line);border-radius:13px;background:linear-gradient(145deg,rgba(255,255,255,.025),transparent 55%),var(--panel)}
+.metric{padding:15px}
+.metric-label{color:var(--muted);font-size:.71rem}
+.metric-value{display:block;margin-top:5px;font-size:1.65rem;font-weight:760;letter-spacing:-.04em}
+.panel{padding:18px;margin-bottom:16px}
+.panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:13px}
+h2{margin:0;font-size:1rem;letter-spacing:-.02em}
+.panel-note{margin:4px 0 0;color:var(--muted);font-size:.72rem}
+.search{width:min(100%,300px);height:38px;padding:0 11px;border:1px solid var(--line);border-radius:8px;outline:none;background:#11141d;color:var(--ink);font-size:.78rem}
+.search:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(165,180,252,.12)}
+.table-wrap{overflow:auto}
+table{width:100%;border-collapse:collapse;text-align:left;font-size:.74rem}
+th{padding:10px;color:var(--muted);font-size:.65rem;font-weight:750;letter-spacing:.08em;text-transform:uppercase}
+td{padding:11px 10px;border-top:1px solid rgba(255,255,255,.055);vertical-align:top}
+.username{font-weight:700}
+.muted{color:var(--muted)}
+.id{max-width:170px;overflow-wrap:anywhere;font-family:ui-monospace,monospace;font-size:.66rem}
+.reset{min-width:190px}
+.reset summary{color:var(--accent);font-size:.68rem;cursor:pointer}
+.reset-form{display:grid;gap:7px;min-width:180px;margin-top:8px}
+.reset-form input{width:100%;height:34px;padding:0 8px;border:1px solid var(--line);border-radius:7px;background:#11141d;color:var(--ink);font-size:.68rem}
+.reset-form button{height:32px;border:0;border-radius:7px;background:var(--panel2);color:var(--ink);font-size:.66rem;font-weight:700;cursor:pointer}
+.reset-form button:hover{background:#30374c}
+.password-controls{display:flex;gap:6px}
+.password-controls input{min-width:0}
+.reveal-password{flex:0 0 auto;padding:0 7px;border:1px solid var(--line);border-radius:7px;background:var(--panel2);color:var(--muted);font-size:.64rem;cursor:pointer}
+.danger-button{padding:6px 8px;border:1px solid rgba(252,165,165,.22);border-radius:7px;background:rgba(252,165,165,.055);color:var(--red);font-size:.66rem;font-weight:700;cursor:pointer}
+.danger-button:hover{background:rgba(252,165,165,.12)}
+.flash{margin:0 0 15px;padding:10px 12px;border:1px solid var(--line);border-radius:9px;font-size:.74rem}
+.flash.success{border-color:rgba(134,239,172,.2);background:rgba(134,239,172,.05);color:var(--green)}
+.flash.error{border-color:rgba(252,165,165,.2);background:rgba(252,165,165,.05);color:var(--red)}
+.capture-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,360px),1fr));gap:12px}
+.capture{min-width:0;display:grid;grid-template-columns:124px minmax(0,1fr);gap:13px;padding:12px;border:1px solid rgba(255,255,255,.06);border-radius:11px;background:rgba(255,255,255,.015)}
+.preview{position:relative;width:124px;height:96px;display:grid;place-items:center;overflow:hidden;border:1px solid var(--line);border-radius:8px;background:#10121a;color:var(--muted);font-size:.65rem;text-align:center}
+.preview img{width:100%;height:100%;object-fit:cover}
+.source-icon{position:absolute;top:6px;left:6px;display:grid;place-items:center;min-width:25px;height:25px;padding:0 5px;border:1px solid rgba(255,255,255,.17);border-radius:7px;background:rgba(16,18,26,.84);font-size:.78rem}
+.capture-title{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.capture-title strong{font-size:.78rem}
+.capture-time{color:var(--muted);font-size:.67rem}
+.capture-meta{display:flex;flex-wrap:wrap;gap:6px;margin:7px 0}
+.tag{padding:3px 7px;border:1px solid var(--line);border-radius:999px;color:#d3d6e5;font-size:.63rem}
+.emotions{color:var(--muted);font-size:.69rem}
+.emotion-icons{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.emotion-icon{display:inline-flex;align-items:center;gap:4px;padding:3px 6px;border:1px solid var(--line);border-radius:7px;background:var(--panel2);color:#d9dbee;font-size:.62rem}
+.capture-actions{display:flex;justify-content:flex-end;margin-top:9px}
+.faces{margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.06)}
+.faces summary{color:var(--accent);font-size:.68rem;cursor:pointer}
+.face-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+.face-chip{padding:4px 7px;border-radius:6px;background:var(--panel2);color:#d9dbee;font-size:.63rem}
+.empty{padding:24px;color:var(--muted);font-size:.78rem;text-align:center}
+.warning{margin:18px 0 0;padding:12px 14px;border:1px solid rgba(251,146,60,.18);border-radius:10px;background:rgba(251,146,60,.045);color:#d7b99b;font-size:.7rem}
+.login-shell{min-height:100vh;display:grid;place-items:center;padding:22px}
+.login-card{width:min(100%,420px);padding:30px;border:1px solid var(--line);border-radius:17px;background:var(--panel);box-shadow:0 25px 80px rgba(0,0,0,.35)}
+.login-card h1{font-size:1.6rem}
+.login-card p{color:var(--muted);font-size:.8rem}
+.login-card label{display:block;margin:20px 0 7px;font-size:.75rem;font-weight:650}
+.login-card input[type=password]{width:100%;height:44px;padding:0 11px;border:1px solid var(--line);border-radius:8px;background:#11141d;color:var(--ink)}
+.submit{width:100%;height:44px;margin-top:15px;border:0;border-radius:8px;background:var(--accent);color:#10121a;font-weight:750;cursor:pointer}
+.error{margin-top:12px!important;color:var(--red)!important}
+.setup{padding:13px;border:1px solid rgba(251,146,60,.2);border-radius:9px;background:rgba(251,146,60,.05);color:var(--orange)!important}
+:focus-visible{outline:3px solid #c7d2fe;outline-offset:3px}
+@media(max-width:760px){.wrap{padding:18px}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.hero{align-items:flex-start;flex-direction:column}.panel-head{align-items:flex-start;flex-direction:column}.search{width:100%}}
+@media(max-width:480px){.wrap{padding:13px}.cards{gap:8px}.metric{padding:12px}.metric-value{font-size:1.4rem}.capture{grid-template-columns:76px minmax(0,1fr);gap:9px;padding:9px}.preview{width:76px;height:68px}.capture-title{align-items:flex-start;flex-direction:column;gap:2px}.login-card{padding:23px}}
+</style>
+</head>
+<body>
+{% if not authorized %}
+<main class="login-shell">
+  <section class="login-card">
+    <div class="brand"><span class="mark" aria-hidden="true">✳</span><div>Emotion Studio<small>Private owner area</small></div></div>
+    <h1 style="margin-top:25px">Stored data</h1>
+    {% if configured %}
+    <p>Enter the owner passphrase to view saved accounts, analysis records, and retained images. This page is restricted to localhost.</p>
+    <form method="post" action="{{ url_for('owner_dashboard') }}">
+      <input type="hidden" name="csrf_token" value="{{ session['csrf_token'] }}">
+      <label for="ownerCode">Owner passphrase</label>
+      <input id="ownerCode" type="password" name="owner_code" autocomplete="current-password" minlength="16" required autofocus>
+      <button class="submit" type="submit">Unlock private data</button>
+    </form>
+    {% else %}
+    <p class="setup">Owner access is not enabled. Set the <code>OWNER_ACCESS_CODE</code> environment variable to a private passphrase of at least 16 characters, then restart the app.</p>
+    {% endif %}
+    {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+  </section>
+</main>
+{% else %}
+<main class="wrap">
+  <header class="topbar">
+    <div class="brand"><span class="mark" aria-hidden="true">✳</span><div>Emotion Studio<small>Private owner area</small></div></div>
+    <span class="private-pill">Local access only</span>
+  </header>
+  <section class="hero">
+    <div><p class="eyebrow">Backend records</p><h1>Stored data</h1><p class="sub">Review accounts, analysis activity, and retained capture images.</p></div>
+    <form method="post" action="{{ url_for('owner_logout') }}"><input type="hidden" name="csrf_token" value="{{ session['csrf_token'] }}"><button class="logout" type="submit">Lock owner area</button></form>
+  </section>
+  {% for category, message in get_flashed_messages(with_categories=true) %}
+  <p class="flash {{ category }}" role="status">{{ message }}</p>
+  {% endfor %}
+  <section class="cards" aria-label="Backend totals">
+    <div class="metric"><span class="metric-label">Accounts</span><strong class="metric-value">{{ data.totals.users }}</strong></div>
+    <div class="metric"><span class="metric-label">Analysis records</span><strong class="metric-value">{{ data.totals.analyses }}</strong></div>
+    <div class="metric"><span class="metric-label">Faces analyzed</span><strong class="metric-value">{{ data.totals.faces }}</strong></div>
+    <div class="metric"><span class="metric-label">Saved images</span><strong class="metric-value">{{ data.totals.images }}</strong></div>
+  </section>
+  <section class="panel">
+    <div class="panel-head">
+      <div><h2>Accounts</h2><p class="panel-note">Successful password sign-ins and the latest IP observed by the app are shown. Failed sign-ins are not counted.</p></div>
+      <input class="search" id="accountSearch" type="search" placeholder="Filter accounts…" aria-label="Filter accounts">
+    </div>
+    {% if data.users %}
+    <div class="table-wrap"><table id="accountsTable">
+      <thead><tr><th>Account</th><th>Created</th><th>Last active</th><th>Sign-ins</th><th>Latest observed IP</th><th>Analyses</th><th>Faces</th><th>Owner action</th></tr></thead>
+      <tbody>{% for user in data.users %}
+        <tr data-search="{{ user.username or '' }} {{ user.display_name }} {{ user.id }} {{ user.last_login_ip or '' }}">
+          <td><div class="username">{{ user.username or user.display_name }}{% if not user.username %} <span class="muted">(legacy)</span>{% endif %}</div><div class="id">{{ user.id }}</div></td>
+          <td>{{ user.created_at }}</td><td>{{ user.last_seen_at }}</td>
+          <td>{{ user.login_count }}</td><td>{{ user.last_login_ip or 'Not recorded' }}</td>
+          <td>{{ user.analysis_count }}</td><td>{{ user.face_count }}</td>
+          <td>{% if user.username %}<details class="reset">
+            <summary>Reset password</summary>
+            <form class="reset-form" method="post" action="{{ url_for('owner_reset_password', user_id=user.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ session['csrf_token'] }}">
+              <div class="password-controls">
+                <input type="password" name="new_password" minlength="8" maxlength="128" autocomplete="new-password" placeholder="New password (8+)" aria-label="New password for {{ user.username }}" required>
+                <button class="reveal-password" type="button" aria-label="Show entered password">Show</button>
+              </div>
+              <input type="password" name="confirm_password" minlength="8" maxlength="128" autocomplete="new-password" placeholder="Confirm password" aria-label="Confirm new password for {{ user.username }}" required>
+              <button type="submit">Set new password</button>
+            </form>
+            <p class="panel-note">Existing passwords are securely hashed and cannot be viewed. You can reveal the new password while entering it.</p>
+          </details>{% else %}<span class="muted">Legacy profile</span>{% endif %}
+          <form method="post" action="{{ url_for('owner_delete_user', user_id=user.id) }}" onsubmit="return confirm('Delete this account and all of its analysis records and saved images? This cannot be undone.');">
+            <input type="hidden" name="csrf_token" value="{{ session['csrf_token'] }}">
+            <button class="danger-button" type="submit">Delete account</button>
+          </form></td>
+        </tr>
+      {% endfor %}</tbody>
+    </table></div>
+    {% else %}<div class="empty">No saved accounts yet.</div>{% endif %}
+  </section>
+  <section class="panel">
+    <div class="panel-head">
+      <div><h2>Recent analysis</h2><p class="panel-note">Saved-image records only · Latest {{ data.captures|length }} shown · newest first</p></div>
+      <input class="search" id="captureSearch" type="search" placeholder="Filter by account, source, or emotion…" aria-label="Filter analysis records">
+    </div>
+    {% if data.captures %}
+    <div class="capture-list" id="captureList">
+      {% for capture in data.captures %}
+      <article class="capture" data-search="{{ capture.username or capture.display_name }} {{ capture.source }} {{ capture.emotions or '' }} {{ capture.captured_at }}">
+        <a class="preview" href="{{ capture.image_url }}" target="_blank" rel="noreferrer" aria-label="View saved capture">
+          <img src="{{ capture.image_url }}" alt="Saved analysis capture" loading="lazy">
+          <span class="source-icon" title="{{ capture.source }}">{% if capture.source == 'camera' %}📷{% elif capture.source == 'meet' %}🎥{% else %}🖼️{% endif %}</span>
+        </a>
+        <div>
+          <div class="capture-title"><strong>{{ capture.username or capture.display_name }}</strong><span class="capture-time">{{ capture.captured_at }}</span></div>
+          <div class="capture-meta"><span class="tag">{{ capture.source }}</span><span class="tag">{{ capture.width }} × {{ capture.height }}</span><span class="tag">{{ capture.face_count }} {{ 'face' if capture.face_count == 1 else 'faces' }}</span></div>
+          {% if capture.faces %}
+          <div class="emotion-icons" aria-label="Detected emotions">
+            {% for face in capture.faces %}
+            <span class="emotion-icon">{% if face.emotion == 'Happy' %}😄{% elif face.emotion == 'Sad' %}😢{% elif face.emotion == 'Angry' %}😠{% elif face.emotion == 'Fear' %}😨{% elif face.emotion == 'Disgust' %}🤢{% elif face.emotion == 'Surprise' %}😲{% else %}😐{% endif %} {{ face.emotion }} · {{ '%.0f'|format(face.confidence) }}%</span>
+            {% endfor %}
+          </div>
+          {% else %}<div class="emotions">Saved image · no face result</div>{% endif %}
+          {% if capture.faces %}
+          <details class="faces"><summary>{{ capture.faces|length }} face result{{ '' if capture.faces|length == 1 else 's' }}</summary>
+            <div class="face-row">{% for face in capture.faces %}<span class="face-chip">{{ face.emotion }} · {{ '%.1f'|format(face.confidence) }}%</span>{% endfor %}</div>
+          </details>
+          {% endif %}
+          <div class="capture-actions">
+            <form method="post" action="{{ url_for('owner_delete_analysis', frame_id=capture.id) }}" onsubmit="return confirm('Delete this saved analysis and its image? This cannot be undone.');">
+              <input type="hidden" name="csrf_token" value="{{ session['csrf_token'] }}">
+              <button class="danger-button" type="submit">Delete analysis</button>
+            </form>
+          </div>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}<div class="empty">No analysis records have been stored yet.</div>{% endif %}
+  </section>
+  <p class="warning">This private page contains sensitive face-analysis records, saved images, and account sign-in IP addresses. It is available only from this computer and requires the separate owner passphrase. Password resets are performed here and are never displayed after saving.</p>
+</main>
+<script>
+function filterItems(inputId,selector){
+  const input=document.getElementById(inputId);
+  if(!input)return;
+  input.addEventListener("input",()=>{
+    const query=input.value.trim().toLowerCase();
+    document.querySelectorAll(selector).forEach(row=>{
+      row.hidden=!row.dataset.search.toLowerCase().includes(query);
+    });
+  });
+}
+filterItems("accountSearch","#accountsTable tbody tr");
+filterItems("captureSearch","#captureList .capture");
+document.querySelectorAll(".reveal-password").forEach(button=>{
+  button.addEventListener("click",()=>{
+    const password=button.closest(".reset-form").querySelector('[name="new_password"]');
+    const reveal=password.type==="password";
+    password.type=reveal?"text":"password";
+    button.textContent=reveal?"Hide":"Show";
+    button.setAttribute("aria-label",reveal?"Hide entered password":"Show entered password");
+  });
+});
+</script>
+{% endif %}
+</body>
+</html>

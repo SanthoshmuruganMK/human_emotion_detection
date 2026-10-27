@@ -1,0 +1,88 @@
+Emotion Studio
+==============
+
+Run on this computer or on your local Wi-Fi
+------------------------------------------
+1. Open PowerShell in the project folder.
+2. Activate the existing environment:
+   .\.venv\Scripts\Activate.ps1
+3. If port 5000 is already occupied, choose a free port, for example:
+   $env:PORT = "5002"
+4. Start the app:
+   python app.py
+5. Open the local URL printed in the terminal (127.0.0.1 with the selected
+   port) on this computer. The terminal and dashboard display the local-network
+   IP link for other devices on the same Wi-Fi.
+6. For camera access from other devices, use a trusted HTTPS deployment.
+   Browsers restrict camera and Meet-tab sharing on ordinary local-network HTTP
+   addresses.
+
+The first start creates a backend folder containing:
+- emotion_data.sqlite3: device profiles, timestamps, emotion scores, and
+  per-frame analysis records.
+- captures\: full analyzed frames with detected faces. Up to five images per
+  emotion are retained for each device; frames without a detected face are
+  not saved as images.
+
+Register a device by choosing a name. Save the generated Device ID and private
+access code; they are shown only once. Returning devices sign in with those
+details. The owner data viewer is a separate interface at /owner and is not
+linked from the device pages. It requires owner credentials configured by you;
+device IDs and device access codes cannot open it. Keep all credentials private.
+When the server starts, it prints two links for each network address: use the
+/login link for participants and keep the /owner link for yourself.
+
+Before starting the app, configure your own owner ID and code in PowerShell:
+   $env:ADMIN_ACCESS_ID = "santhoshmk06"
+      $env:ADMIN_ACCESS_ID = "santhoshmk06"
+   $env:ADMIN_ACCESS_CODE = "santhosh07072006"
+   python app.py
+The owner code must contain at least 16 characters. These environment settings
+apply to that PowerShell window; set them again in each new window, or use your
+hosting platform's secret settings for a deployment. The app will not start
+without both owner credentials. Do not put the code in source files or share it
+in chat.
+
+Render deployment
+-----------------
+The render.yaml file prepares a Render web service using HTTPS and Gunicorn.
+Render deploys from a connected Git repository. This project folder is not
+currently connected to a Git repository. Create a private GitHub repository,
+then push the project files (not the local .venv, venv, datasets, login, or
+backend folders). Keep emotion_model.h5 and
+haarcascade_frontalface_default.xml in the repository because the app needs
+them to start.
+
+In Render, create a Blueprint from that private repository and apply the
+render.yaml configuration. Provide ADMIN_ACCESS_ID and ADMIN_ACCESS_CODE as
+private environment-variable values when prompted. The owner code must contain
+at least 16 characters. Do not put either value in render.yaml, source code, or
+chat. Rotate any owner code previously shared. Render generates APP_SECRET_KEY.
+The app detects Render's HTTPS service URL, so secure session cookies are
+enabled without manually entering its URL. After a successful deploy, Render
+shows the service's HTTPS address. Use its /login link for participants and keep its
+/owner link private. No public address exists before the service is deployed.
+
+The Blueprint is deliberately configured on Render's Free plan for testing.
+Free services can sleep, have an ephemeral filesystem, and do not have a
+persistent disk. Data under /tmp/emotion-studio-backend, including the database
+and saved images, can be lost on sleep, restart, or redeploy. The app's local
+TensorFlow startup memory is about 650 MB, so a 512 MB service may fail to
+start. Do not use this free configuration for real user data or production.
+For persistent private data, upgrade the web service to a paid plan with at
+least 2 GB RAM, attach a persistent disk mounted at /var/data, and change
+BACKEND_DIR to /var/data in the Render environment settings. Verify the
+service is healthy before sharing its HTTPS URL.
+
+The Flask application is exposed as app:app for a WSGI host. Keep the backend
+folder out of public/static directories and back it up securely.
+
+People being analyzed must be informed before their camera or meeting frames
+are captured and saved. Google Meet remains in a separate tab; participants'
+visible video is analyzed only after the user shares that tab.
+
+Model training
+--------------
+The train_model.py script fine-tunes the current 48x48 grayscale model using
+the train\ dataset. It compares validation results and keeps the current model
+unless the candidate improves safely.

@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: emotion-studio-app
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --timeout 120
+    healthCheckPath: /login
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.2
+      - key: BACKEND_DIR
+        value: /tmp/emotion-studio-backend
+      - key: APP_SECRET_KEY
+        generateValue: true
