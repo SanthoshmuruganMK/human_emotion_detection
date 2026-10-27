@@ -72,7 +72,7 @@ EMOTION_LABELS = {
     6: "Surprise",
 }
 
-app = Flask(__name__, template_folder="templates")
+TEMPLATE_DIR = os.path.join(PROJECT_DIR, "templates") if not os.path.isdir(TEMPLATE_DIR):     TEMPLATE_DIR = PROJECT_DIR app = Flask(__name__, template_folder=TEMPLATE_DIR)
 app.config.update(
     MAX_CONTENT_LENGTH=12 * 1024 * 1024,
     PERMANENT_SESSION_LIFETIME=timedelta(days=30),
